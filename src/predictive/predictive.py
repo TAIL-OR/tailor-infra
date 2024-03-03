@@ -267,8 +267,8 @@ class Predictive:
         
         return data.to_json(orient='records', date_format='iso')
 
-if __name__ == '__main__':
-    p = Predictive()
-    result = p.contamination(1)
+# if __name__ == '__main__':
+#     p = Predictive()
+#     result = p.contamination(1)
 
-    print(result)
+#     print(result)
