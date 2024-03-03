@@ -237,5 +237,3 @@ class ReadData:
   
   def get_consumable_quantity(self, hospital_id, consumable_id):
     return self.hospital_consumables[hospital_id][consumable_id]
-
-read_data = ReadData()

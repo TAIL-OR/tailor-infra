@@ -1,54 +1,56 @@
 import pyomo.environ as pyo
+from ..utils.read_data import ReadData
 
 class Data:
-  def __init__(self, filename):
-    with open(filename) as file_object:
-      self.F = list(range(int(file_object.readline()))) # F: set of facilities
-      self.K = [int(n) for n in file_object.readline().split()] # K: built facilities
-      n_req = 0
-      req = []
-      for n in file_object.readline().split():
-        req.append(list(range(n_req, n_req + int(n))))
-        n_req += int(n)
-      self.E, self.I, self.S = req # E: set of equipments; I: set of infrastructure; S: set of staff
-      self.d = int(file_object.readline()) # d: demand of ICU beds
-      self.c = [] # c: cost of building facilities
-      for i, n in enumerate(file_object.readline().split()):
-        if i in self.K:
-          self.c.append(0)
-        else:
-          self.c.append(float(n))
-      self.l = [int(n) for n in file_object.readline().split()] # l: lower bound of ICU beds in each facility, if built
-      self.u = [int(n) for n in file_object.readline().split()] # u: upper bound of ICU beds in each facility
-      self.p = [float(n) for n in file_object.readline().split()] # p: price of each requirement
-      self.r = [float(n) for n in file_object.readline().split()] # r: repair price of each requirement (equipments and infrastructure)
-      self.n = [float(n) for n in file_object.readline().split()] # n: necessary rate of each requirement per ICU bed
-      self.a = [] # a: availability of each working requirement in each facility
-      for i in self.F:
-        if i in self.K:
-          self.a.append([int(n) for n in file_object.readline().split()])
-        else:
-          self.a.append([0]*len(self.E + self.I + self.S))
-      self.m = [] # m: number of units of each requirement in need of repair
-      for i in self.F:
-        if i in self.K:
-          self.m.append([int(n) for n in file_object.readline().split()])
-        else:
-          self.m.append([0]*len(self.E + self.I))
-      self.t = [] # t: transfer cost of each requirement among hospitals
-      for _ in self.E:
-        costs_for_req_j = []
-        for _ in self.F:
-          costs_for_req_j.append([int(n) for n in file_object.readline().split()])
-        self.t.append(costs_for_req_j)
-      for _ in self.I:
-        self.t.append(None)
-      for _ in self.S:
-        costs_for_req_j = []
-        for _ in self.F:
-          costs_for_req_j.append([int(n) for n in file_object.readline().split()])
-        self.t.append(costs_for_req_j)
-
+  def __init__(self):
+    read_data = ReadData()
+    self.F = list(range(len(read_data.get_hospital_ids()))) # F: set of facilities
+    self.K = [] # K: built facilities
+    for iter, id in enumerate(read_data.get_hospital_ids()):
+      if(read_data.get_hospital_built(id)):
+        self.K.append(iter)
+    self.M = list(range(len(read_data.get_equipment_ids()))) # M: set of maintainable requirements
+    self.N = list(range(len(self.M), len(self.M) + len(read_data.get_staff_ids()))) # N: set of not maintainable requirements
+    self.N += list(range(len(self.M) + len(self.N), len(self.M) + len(self.N) + len(read_data.get_staff_ids())))
+    self.d = 50 # d: demand of ICU beds
+    self.c = [] # c: cost of building facilities
+    for i in read_data.get_hospital_ids():
+      if i in self.K:
+        self.c.append(0)
+      else:
+        self.c.append(read_data.get_hospital_construction_cost(i))
+    self.l = [read_data.get_hospital_lb_beds(i) for i in self.F] # l: lower bound of ICU beds in each facility, if built
+    self.u = [read_data.get_hospital_ub_beds(i) for i in self.F] # u: upper bound of ICU beds in each facility
+    self.p = [read_data.get_equipment_price(i) for i in read_data.get_equipment_ids] # p: price of each requirement
+    self.p += [read_data.get_staff_salary(i) for i in read_data.get_staff_ids()]
+    self.r = [float(n) for n in file_object.readline().split()] # r: repair price of each requirement (equipments and infrastructure)
+    self.n = [float(n) for n in file_object.readline().split()] # n: necessary rate of each requirement per ICU bed
+    self.a = [] # a: availability of each working requirement in each facility
+    for i in self.F:
+      if i in self.K:
+        self.a.append([int(n) for n in file_object.readline().split()])
+      else:
+        self.a.append([0]*len(self.E + self.I + self.S))
+    self.m = [] # m: number of units of each requirement in need of repair
+    for i in self.F:
+      if i in self.K:
+        self.m.append([int(n) for n in file_object.readline().split()])
+      else:
+        self.m.append([0]*len(self.E + self.I))
+    self.t = [] # t: transfer cost of each requirement among hospitals
+    for _ in self.E:
+      costs_for_req_j = []
+      for _ in self.F:
+        costs_for_req_j.append([int(n) for n in file_object.readline().split()])
+      self.t.append(costs_for_req_j)
+    for _ in self.I:
+      self.t.append(None)
+    for _ in self.S:
+      costs_for_req_j = []
+      for _ in self.F:
+        costs_for_req_j.append([int(n) for n in file_object.readline().split()])
+      self.t.append(costs_for_req_j)
+      
   def print_data(self):
     print('F:', self.F)
     print('K:', self.K)
@@ -568,7 +570,7 @@ body {
 """
     return html_content
   
-model = Model(Data('instances/mock.txt'))
-model.print_solution()
-with open('output.html', 'w') as file:
-  file.write(model.to_html())
+def run_model():
+  model = Model(Data())
+  with open('output.html', 'w') as file:
+    file.write(model.to_html())
