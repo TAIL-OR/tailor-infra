@@ -3,9 +3,9 @@ import datetime
 
 class Statistics:
     def __init__(self):
-        self.dataset = pd.read_csv('../predictive/data/dados-abertos.csv', sep=';')
+        self.dataset = pd.read_csv('src/predictive/data/dados-abertos.csv', sep=';')
         
-    def get_last_nine_months():
+    def get_last_nine_months(self):
         month = datetime.datetime.now().month
         year = datetime.datetime.now().year
         last_nine_months = []
@@ -89,15 +89,15 @@ class Statistics:
         return {(3, 2024): 12, (2, 2024): 25, (1, 2024): 11, (12, 2023): 36,
                 (11, 2023): 19, (10, 2023): 17, (9, 2023): 23, (8, 2023): 15, (7, 2023): 19}
     
-    def region_get_free_beds_per_month():
+    def region_get_free_beds_per_month(self):
         return {(3, 2024): 12, (2, 2024): 25, (1, 2024): 11, (12, 2023): 36,
                 (11, 2023): 19, (10, 2023): 17, (9, 2023): 23, (8, 2023): 15, (7, 2023): 19}
     
-    def region_get_occupied_beds_per_month():
+    def region_get_occupied_beds_per_month(self):
         return {(3, 2024): 12, (2, 2024): 25, (1, 2024): 11, (12, 2023): 36,
                 (11, 2023): 19, (10, 2023): 17, (9, 2023): 23, (8, 2023): 15, (7, 2023): 19}
     
-    def region_get_waitlist_beds_per_month():
+    def region_get_waitlist_per_month(self):
         return {(3, 2024): 12, (2, 2024): 25, (1, 2024): 11, (12, 2023): 36,
                 (11, 2023): 19, (10, 2023): 17, (9, 2023): 23, (8, 2023): 15, (7, 2023): 19}
         
