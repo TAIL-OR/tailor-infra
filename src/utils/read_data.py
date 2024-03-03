@@ -12,7 +12,7 @@ class ReadData:
     # If modifying these scopes, delete the file token.json.
     self.scopes = ["https://www.googleapis.com/auth/spreadsheets"]
 
-    self.spreadsheet_id = "1P8e1KawU9v7YuTZHUYrmXV8m494r9APV_CxzxC6qhDA"
+    self.spreadsheet_id = "1c75vMr_bDLexPcuf0RcBzCxH_w5XcdSAYW_SGOjHu34"
     
     self.creds = None
     # The file token.json stores the user's access and refresh tokens, and is
