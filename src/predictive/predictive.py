@@ -159,5 +159,5 @@ class Predictive:
         
         
     def contamination(self, horizon):
-        response = ...
+        response = {'horizon': horizon}
         return response
