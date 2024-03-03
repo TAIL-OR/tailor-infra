@@ -1,3 +1,5 @@
 credentials.json
 *.html
 *.lp
+
+__pycache__/
