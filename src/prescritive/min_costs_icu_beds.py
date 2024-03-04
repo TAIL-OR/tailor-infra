@@ -12,10 +12,10 @@ class Data:
       if(read_data.get_hospital_built(id)):
         self.K.append(iter)
     
-    self.M = list(range(len(read_data.get_equipment_ids()))) # M: set of maintainable requirements
+    self.R = list(range(len(read_data.get_equipment_ids()))) # M: set of repairable requirements
     
-    self.N = list(range(len(self.M), len(self.M) + len(read_data.get_staff_ids()))) # N: set of not maintainable requirements
-    self.N += list(range(len(self.M) + len(self.N), len(self.M) + len(self.N) + len(read_data.get_staff_ids())))
+    self.U = list(range(len(self.R), len(self.R) + len(read_data.get_staff_ids()))) # N: set of unrepairable requirements
+    self.U += list(range(len(self.R) + len(self.U), len(self.R) + len(self.U) + len(read_data.get_staff_ids())))
     
     self.d = 50 # d: demand of ICU beds
     
@@ -34,7 +34,7 @@ class Data:
     self.p += [read_data.get_staff_salary(id) for id in read_data.get_staff_ids()]
     self.p += [read_data.get_consumable_price(id) for id in read_data.get_consumable_ids()]
     
-    self.r = [read_data.get_equipment_maintenance_cost(id) for id in read_data.get_equipment_ids()] # r: repair price of each maintainable requirement
+    self.r = [read_data.get_equipment_maintenance_cost(id) for id in read_data.get_equipment_ids()] # r: repair price of each repairable requirement
     
     self.n = [read_data.get_equipment_necessary_rate(id) for id in read_data.get_equipment_ids()] # n: necessary rate of each requirement per ICU bed
     self.n += [read_data.get_staff_necessary_rate(id) for id in read_data.get_staff_ids()]
@@ -43,36 +43,40 @@ class Data:
     self.a = [] # a: availability of each working requirement in each facility
     for iter, hospital_id in enumerate(read_data.get_hospital_ids()):
       if iter in self.K:
+        a_row = []
         for id in read_data.get_equipment_ids():
-          self.a.append(read_data.get_equipment_quantity(hospital_id, id))
+          a_row.append(read_data.get_equipment_quantity(hospital_id, id))
         for id in read_data.get_staff_ids():
-          self.a.append(read_data.get_staff_quantity(hospital_id, id))
+          a_row.append(read_data.get_staff_quantity(hospital_id, id))
         for id in read_data.get_consumable_ids():
-          self.a.append(read_data.get_consumable_quantity(hospital_id, id))
+          a_row.append(read_data.get_consumable_quantity(hospital_id, id))
+        self.a.append(a_row)
       else:
-        self.a += [0]*(len(self.M) + len(self.N))
+        self.a.append([0]*(len(self.R) + len(self.U)))
     
-    self.m = [] # m: number of units of each maintainable requirement in need of repair
+    self.m = [] # m: number of units of each repairable requirement in need of repair
     for iter, hospital_id in enumerate(read_data.get_hospital_ids()):
       if iter in self.K:
+        m_row = []
         for id in read_data.get_equipment_ids():
-          self.m.append(read_data.get_equipment_maintenance_quantity(hospital_id, id))
+          m_row.append(read_data.get_equipment_maintenance_quantity(hospital_id, id))
+        self.m.append(m_row)
       else:
-        self.m += [0]*len(self.M)
+        self.m.append([0]*len(self.R))
     
-    # with open('data/transfer_costs.txt', 'r') as file_object:
-    #   self.t = [] # t: transfer cost of each requirement among hospitals
-    #   for _ in self.M + self.N:
-    #     costs_for_req_j = []
-    #     for _ in self.F:
-    #       costs_for_req_j.append([int(n) for n in file_object.readline().split()])
-    #     self.t.append(costs_for_req_j)
+    with open('data/transfer_costs.txt', 'r') as file_object:
+      self.t = [] # t: transfer cost of each requirement among hospitals
+      for _ in self.R + self.U:
+        costs_for_req_j = []
+        for _ in self.F:
+          costs_for_req_j.append([int(n) for n in file_object.readline().split()])
+        self.t.append(costs_for_req_j)
       
   def print_data(self):
     print('F:', self.F)
     print('K:', self.K)
-    print('M:', self.M)
-    print('N:', self.N)
+    print('M:', self.R)
+    print('N:', self.U)
     print('d:', self.d)
     print('c:', self.c)
     print('l:', self.l)
@@ -82,7 +86,7 @@ class Data:
     print('n:', self.n)
     print('a:', self.a)
     print('m:', self.m)
-    # print('t:', self.t)
+    print('t:', self.t)
 
 class Model:
   def __init__(self, data):
@@ -90,64 +94,64 @@ class Model:
     self.data = data
     self.model = pyo.ConcreteModel()
     self.model.F = self.data.F
-    self.model.E = self.data.E
-    self.model.I = self.data.I
-    self.model.S = self.data.S
+    self.model.R = self.data.R
+    self.model.U = self.data.U
     self.model.K = self.data.K
 
     # Variables
     self.model.x = pyo.Var(self.model.F, within=pyo.NonNegativeIntegers) # x: number of ICU beds in each facility
     self.model.y = pyo.Var(self.model.F, within=pyo.Binary) # y: whether each facility is built or not
-    self.model.z = pyo.Var(self.model.F, (self.model.E + self.model.I + self.model.S),
-      within=pyo.NonNegativeIntegers) # z: number of each requirement acquired by each facility
-    self.model.w = pyo.Var(self.model.F, (self.model.E + self.model.I), within=pyo.NonNegativeIntegers) # w: number of each requirement repaired in each facility
-    self.model.v = pyo.Var((self.model.E + self.model.S), self.model.F, self.model.F,
+    self.model.z = pyo.Var(self.model.F, (self.model.R + self.model.U), within=pyo.NonNegativeIntegers) # z: number of each requirement acquired by each facility
+    self.model.w = pyo.Var(self.model.F, self.model.R, within=pyo.NonNegativeIntegers) # w: number of each requirement repaired in each facility
+    self.model.v = pyo.Var((self.model.R + self.model.U), self.model.F, self.model.F,
       within=pyo.NonNegativeIntegers) # v: number of each requirement transferred from each facility to each facility
     
     # Objective function
     self.model.objective = pyo.Objective(expr=sum(self.data.c[i]*self.model.y[i] +
-        sum(self.data.p[j]*self.model.z[i, j] for j in (self.model.E + self.model.I + self.model.S)) +
-        sum(self.data.m[i][j]*self.model.w[i, j] for j in (self.model.E + self.model.I)) +
-        sum(sum(self.data.t[j][i][l]*self.model.v[j, i, l] for l in self.model.F if l != i)
-        for j in (self.model.E + self.model.S)) for i in self.model.F), sense=pyo.minimize)
+      sum(self.data.p[j]*self.model.z[i, j] + sum(self.data.t[j][i][l]*self.model.v[j, i, l]
+      for l in self.model.F if l != i) for j in (self.model.R + self.model.U)) +
+      sum(self.data.m[i][j]*self.model.w[i, j] for j in self.model.R) for i in self.model.F),
+      sense=pyo.minimize)
     
     # Constraints
     self.model.demand_constraint = pyo.Constraint(expr=sum(self.model.x[i] for i in self.model.F) >=
       self.data.d)
-    self.model.equipment_constraint = pyo.ConstraintList()
+    
+    self.model.repairable_req_constraint = pyo.ConstraintList()
     for i in self.model.F:
-      for j in self.model.E:
-        self.model.equipment_constraint.add(self.data.a[i][j] + self.model.z[i, j] +
+      for j in self.model.R:
+        self.model.repairable_req_constraint.add(self.data.a[i][j] + self.model.z[i, j] +
           self.model.w[i, j] + sum(self.model.v[j, l, i] - self.model.v[j, i, l] for l in self.model.F
           if l != i) >= self.data.n[j]*self.model.x[i])
-    self.model.infrastructure_constraint = pyo.ConstraintList()
+    
+    self.model.unrepairable_req_constraint = pyo.ConstraintList()
     for i in self.model.F:
-      for j in self.model.I:
-        self.model.infrastructure_constraint.add(self.data.a[i][j] + self.model.z[i, j] +
-          self.model.w[i, j] >= self.data.n[j]*self.model.x[i])
-    self.model.staff_constraint = pyo.ConstraintList()
-    for i in self.model.F:
-      for j in self.model.S:
-        self.model.staff_constraint.add(self.data.a[i][j] + self.model.z[i, j] +
+      for j in self.model.U:
+        self.model.unrepairable_req_constraint.add(self.data.a[i][j] + self.model.z[i, j] +
           sum(self.model.v[j, l, i] - self.model.v[j, i, l] for l in self.model.F if l != i) >=
           self.data.n[j]*self.model.x[i])
+    
     self.model.repair_constraint = pyo.ConstraintList()
     for i in self.model.F:
-      for j in (self.model.E + self.model.I):
+      for j in (self.model.R):
         self.model.repair_constraint.add(self.model.w[i, j] <= self.data.m[i][j])
+    
     self.model.transfer_constraint = pyo.ConstraintList()
-    for j in self.model.E:
+    for j in self.model.R + self.model.U:
       for i in self.model.F:
         for l in self.model.F:
           if l != i:
             self.model.transfer_constraint.add(self.model.v[j, i, l] <= self.data.a[i][j])
+    
     self.model.bed_limit_constraint = pyo.ConstraintList()
     for i in self.model.F:
       self.model.bed_limit_constraint.add(self.data.l[i]*self.model.y[i] <= self.model.x[i])
       self.model.bed_limit_constraint.add(self.model.x[i] <= self.data.u[i])
+    
     self.model.y_fix_constraint = pyo.ConstraintList()
     for i in self.model.K:
       self.model.y_fix_constraint.add(self.model.y[i] == 1)
+    
     self.model.y_dependent_constraint = pyo.ConstraintList()
     for i in self.model.F:
       self.model.y_dependent_constraint.add(self.model.x[i] / self.data.u[i] <= self.model.y[i])
@@ -164,83 +168,46 @@ class Model:
           print('Build Hospital', i)
         else:
           print('Hospital', i)
-        cur_beds = min([self.data.a[i][j]/self.data.n[j] for j in self.model.E + self.model.I +
-          self.model.S])
+        cur_beds = min([self.data.a[i][j]/self.data.n[j] for j in self.model.R + self.model.U])
         print('\tTotal ICU beds:\t', int(pyo.value(self.model.x[i])))
         print('\tAdded ICU beds:\t', int(pyo.value(self.model.x[i]) - cur_beds))
         
         printedAcquire = False
-        for j in self.model.E:
+        for j in self.model.R + self.model.U:
           if pyo.value(self.model.z[i, j]) > 0:
             if not printedAcquire:
               print('\tAcquire:')
               printedAcquire = True
-            print('\t\t\t', int(pyo.value(self.model.z[i, j])), 'units of equipment', j)
-        for j in self.model.I:
-          if pyo.value(self.model.z[i, j]) > 0:
-            if not printedAcquire:
-              print('\tAcquire:')
-              printedAcquire = True
-            print('\t\t\t', int(pyo.value(self.model.z[i, j])), 'units of infrastructure', j)
-        for j in self.model.S:
-          if pyo.value(self.model.z[i, j]) > 0:
-            if not printedAcquire:
-              print('\tAcquire:')
-              printedAcquire = True
-            print('\t\t\t', int(pyo.value(self.model.z[i, j])), 'professionals to staff', j)
-
+            print('\t\t\t', int(pyo.value(self.model.z[i, j])), 'units of requirement', j)
+        
         printedRepair = False
-        for j in self.model.E:
+        for j in self.model.R:
           if pyo.value(self.model.w[i, j]) > 0:
             if not printedRepair:
               print('\tRepair:')
               printedRepair = True
-            print('\t\t\t', int(pyo.value(self.model.w[i, j])), 'units of equipment', j)
-        for j in self.model.I:
-          if pyo.value(self.model.w[i, j]) > 0:
-            if not printedRepair:
-              print('\tRepair:')
-              printedRepair = True
-            print('\t\t\t', int(pyo.value(self.model.w[i, j])), 'units of infrastructure', j)
+            print('\t\t\t', int(pyo.value(self.model.w[i, j])), 'units of requirement', j)
         
         printedTransfer = False
-        for j in self.model.E:
+        for j in self.model.R + self.model.U:
           for l in self.model.F:
             if l != i:
               if pyo.value(self.model.v[j, i, l]) > 0:
                 if not printedTransfer:
                   print('\tTransfer:')
                   printedTransfer = True
-                print('\t\t\t', int(pyo.value(self.model.v[j, i, l])), 'units of equipment', j,
-                  'to Hospital', l)
-        for j in self.model.S:
-          for l in self.model.F:
-            if l != i:
-              if pyo.value(self.model.v[j, i, l]) > 0:
-                if not printedTransfer:
-                  print('\tTransfer:')
-                  printedTransfer = True
-                print('\t\t\t', int(pyo.value(self.model.v[j, i, l])), 'professionals of staff', j,
+                print('\t\t\t', int(pyo.value(self.model.v[j, i, l])), 'units of requirement', j,
                   'to Hospital', l)
         
         printedReceive = False
-        for j in self.model.E:
+        for j in self.model.R + self.model.U:
           for l in self.model.F:
             if l != i:
               if pyo.value(self.model.v[j, l, i]) > 0:
                 if not printedReceive:
                   print('\tReceive:')
                   printedReceive = True
-                print('\t\t\t', int(pyo.value(self.model.v[j, l, i])), 'units of equipment', j,
-                  'from Hospital', l)
-        for j in self.model.S:
-          for l in self.model.F:
-            if l != i:
-              if pyo.value(self.model.v[j, l, i]) > 0:
-                if not printedReceive:
-                  print('\tReceive:')
-                  printedReceive = True
-                print('\t\t\t', int(pyo.value(self.model.v[j, l, i])), 'professionals of staff', j,
+                print('\t\t\t', int(pyo.value(self.model.v[j, l, i])), 'units of requirement', j,
                   'from Hospital', l)
   
   def to_html(self):
@@ -587,9 +554,7 @@ body {
     return html_content
   
 def run_model():
-  data = Data()
-  data.print_data()
-  # model = Model(Data())
+  model = Model(Data())
   # with open('output.html', 'w') as file:
   #   file.write(model.to_html())
 
