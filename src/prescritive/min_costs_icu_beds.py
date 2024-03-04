@@ -3,70 +3,70 @@ from read_data import ReadData
 
 class Data:
   def __init__(self, demand):
-    read_data = ReadData()
+    self.data_reader = ReadData()
 
-    self.F = list(range(len(read_data.get_hospital_ids()))) # F: set of facilities
-    self.dict_hospitals = {id: iter for iter, id in enumerate(read_data.get_hospital_ids())}
+    self.F = list(range(len(self.data_reader.get_hospital_ids()))) # F: set of facilities
+    self.dict_hospitals = {id: iter for iter, id in enumerate(self.data_reader.get_hospital_ids())}
     
     self.K = [] # K: built facilities
-    for iter, id in enumerate(read_data.get_hospital_ids()):
-      if(read_data.get_hospital_built(id)):
+    for iter, id in enumerate(self.data_reader.get_hospital_ids()):
+      if(self.data_reader.get_hospital_built(id)):
         self.K.append(iter)
     
-    self.R = list(range(len(read_data.get_equipment_ids()))) # R: set of repairable requirements
-    self.dict_equipments = {id: iter for iter, id in enumerate(read_data.get_equipment_ids())}
+    self.dict_equipments = {iter: id for iter, id in enumerate(self.data_reader.get_equipment_ids())}
+    self.R = list(range(len(self.data_reader.get_equipment_ids()))) # R: set of repairable requirements
     
-    self.U = list(range(len(self.R), len(self.R) + len(read_data.get_staff_ids()))) # U: set of unrepairable requirements
-    self.dict_staff = {id: iter + len(self.R) for iter, id in enumerate(read_data.get_staff_ids())}
+    self.dict_staff = {iter + len(self.R): id for iter, id in enumerate(self.data_reader.get_staff_ids())}
+    self.U = list(range(len(self.R), len(self.R) + len(self.data_reader.get_staff_ids()))) # U: set of unrepairable requirements
     
+    self.dict_consumables = {iter + len(self.R) + len(self.U): id for iter, id in
+      enumerate(self.data_reader.get_consumable_ids())}
     self.U += list(range(len(self.R) + len(self.U), len(self.R) + len(self.U) +
-      len(read_data.get_consumable_ids())))
-    self.dict_consumables = {id: iter + len(self.R) + len(self.U) for iter, id in
-      enumerate(read_data.get_consumable_ids())}
+      len(self.data_reader.get_consumable_ids())))
     
     self.d = demand # d: demand of ICU beds
     
     self.c = [] # c: cost of building facilities
-    for iter, id in enumerate(read_data.get_hospital_ids()):
+    for iter, id in enumerate(self.data_reader.get_hospital_ids()):
       if id in self.K:
         self.c.append(0)
       else:
-        self.c.append(read_data.get_hospital_construction_cost(id))
+        self.c.append(self.data_reader.get_hospital_construction_cost(id))
     
-    self.l = [read_data.get_hospital_lb_beds(id) for id in read_data.get_hospital_ids()] # l: lower bound of ICU beds in each facility, if built
+    self.l = [self.data_reader.get_hospital_lb_beds(id) for id in self.data_reader.get_hospital_ids()] # l: lower bound of ICU beds in each facility, if built
     
-    self.u = [read_data.get_hospital_ub_beds(id) for id in read_data.get_hospital_ids()] # u: upper bound of ICU beds in each facility
+    self.u = [self.data_reader.get_hospital_ub_beds(id) for id in self.data_reader.get_hospital_ids()] # u: upper bound of ICU beds in each facility
     
-    self.p = [read_data.get_equipment_price(id) for id in read_data.get_equipment_ids()] # p: price of each requirement
-    self.p += [read_data.get_staff_salary(id) for id in read_data.get_staff_ids()]
-    self.p += [read_data.get_consumable_price(id) for id in read_data.get_consumable_ids()]
+    self.p = [self.data_reader.get_equipment_price(id) for id in self.data_reader.get_equipment_ids()] # p: price of each requirement
+    self.p += [self.data_reader.get_staff_salary(id) for id in self.data_reader.get_staff_ids()]
+    self.p += [self.data_reader.get_consumable_price(id) for id in self.data_reader.get_consumable_ids()]
     
-    self.r = [read_data.get_equipment_maintenance_cost(id) for id in read_data.get_equipment_ids()] # r: repair price of each repairable requirement
+    self.r = [self.data_reader.get_equipment_maintenance_cost(id) for id in self.data_reader.get_equipment_ids()] # r: repair price of each repairable requirement
     
-    self.n = [read_data.get_equipment_necessary_rate(id) for id in read_data.get_equipment_ids()] # n: necessary rate of each requirement per ICU bed
-    self.n += [read_data.get_staff_necessary_rate(id) for id in read_data.get_staff_ids()]
-    self.n += [read_data.get_consumable_necessary_rate(id) for id in read_data.get_consumable_ids()]
+    self.n = [self.data_reader.get_equipment_necessary_rate(id) for id in self.data_reader.get_equipment_ids()] # n: necessary rate of each requirement per ICU bed
+    self.n += [self.data_reader.get_staff_necessary_rate(id) for id in self.data_reader.get_staff_ids()]
+    self.n += [self.data_reader.get_consumable_necessary_rate(id) for id in self.data_reader.get_consumable_ids()]
     
     self.a = [] # a: availability of each working requirement in each facility
-    for iter, hospital_id in enumerate(read_data.get_hospital_ids()):
+    for iter, hospital_id in enumerate(self.data_reader.get_hospital_ids()):
       if iter in self.K:
         a_row = []
-        for id in read_data.get_equipment_ids():
-          a_row.append(read_data.get_equipment_quantity(hospital_id, id))
-        for id in read_data.get_staff_ids():
-          a_row.append(read_data.get_staff_quantity(hospital_id, id))
-        for id in read_data.get_consumable_ids():
-          a_row.append(read_data.get_consumable_quantity(hospital_id, id))
+        for id in self.data_reader.get_equipment_ids():
+          a_row.append(self.data_reader.get_equipment_quantity(hospital_id, id))
+        for id in self.data_reader.get_staff_ids():
+          a_row.append(self.data_reader.get_staff_quantity(hospital_id, id))
+        for id in self.data_reader.get_consumable_ids():
+          a_row.append(self.data_reader.get_consumable_quantity(hospital_id, id))
         self.a.append(a_row)
       else:
         self.a.append([0]*(len(self.R) + len(self.U)))
     
     self.m = [] # m: number of units of each repairable requirement in need of repair
-    for iter, hospital_id in enumerate(read_data.get_hospital_ids()):
+    for iter, hospital_id in enumerate(self.data_reader.get_hospital_ids()):
       if iter in self.K:
         m_row = []
-        for id in read_data.get_equipment_ids():
-          m_row.append(read_data.get_equipment_maintenance_quantity(hospital_id, id))
+        for id in self.data_reader.get_equipment_ids():
+          m_row.append(self.data_reader.get_equipment_maintenance_quantity(hospital_id, id))
         self.m.append(m_row)
       else:
         self.m.append([0]*len(self.R))
@@ -359,7 +359,9 @@ body {
         html_content += """
 <div class="hospital-box">
   <div class="clear-box">
-    <strong> Hospital {} </strong>""".format(i)
+    <strong> {} </strong>""".format(self.data.data_reader.get_hospital_name(
+      self.data.dict_hospitals[i]
+    ))
 
         if i not in self.model.K:
           html_content += """
@@ -384,10 +386,20 @@ body {
     <div class="clear-box content">
       <strong> Adquirir: </strong>"""
               printedAcquire = True
+            req_name_str = ""
+            if j in self.data.dict_equipments.keys():
+              req_name_str = "unidades de " + self.data.data_reader.get_equipment_name(
+                self.data.dict_equipments[j])
+            elif j in self.data.dict_staff.keys():
+              req_name_str = "profissionais para o time " + self.data.data_reader.get_staff_team(
+                self.data.dict_staff[j])
+            elif j in self.data.dict_consumables.keys():
+              req_name_str = "unidades de " + self.data.data_reader.get_consumable_name(
+                self.data.dict_consumables[j])
             html_content += """
     <div class="clear-box content">
-      {} unidades do requisito {}
-    </div>""".format(int(pyo.value(self.model.z[i, j])), j)
+      {} {}
+    </div>""".format(int(pyo.value(self.model.z[i, j])), req_name_str)
         if printedAcquire:
           html_content += """
 </div>"""
@@ -400,10 +412,14 @@ body {
 <div class="clear-box content">
     <strong> Reparar: </strong>"""
               printedRepair = True
+            req_name_str = ""
+            if j in self.data.dict_equipments.keys():
+              req_name_str = "unidades de " + self.data.data_reader.get_equipment_name(
+                self.data.dict_equipments[j])
             html_content += """
 <div class="clear-box content">
-    {} unidades do requisito {}
-</div>""".format(int(pyo.value(self.model.w[i, j])), j)
+    {} {}
+</div>""".format(int(pyo.value(self.model.w[i, j])), req_name_str)
         if printedRepair:
           html_content += """
 </div>"""
@@ -418,10 +434,19 @@ body {
 <div class="clear-box content">
     <strong> Transferir: </strong>"""
                   printedTransfer = True
+                if j in self.data.dict_equipments.keys():
+                  req_name_str = "unidades de " + self.data.data_reader.get_equipment_name(
+                    self.data.dict_equipments[j])
+                elif j in self.data.dict_staff.keys():
+                  req_name_str = "profissionais do time " + self.data.data_reader.get_staff_team(
+                    self.data.dict_staff[j])
+                elif j in self.data.dict_consumables.keys():
+                  req_name_str = "unidades de " + self.data.data_reader.get_consumable_name(
+                    self.data.dict_consumables[j])
                 html_content += """
 <div class="clear-box content">
-    {} unidades do requisito {} ao Hospital {}
-</div>""".format(int(pyo.value(self.model.v[j, i, l])), j, l)
+    {} {} ao Hospital {}
+</div>""".format(int(pyo.value(self.model.v[j, i, l])), req_name_str, l)
         if printedTransfer:
           html_content += """
 </div>"""
@@ -436,10 +461,19 @@ body {
 <div class="clear-box content">
     <strong> Receber: </strong>"""
                   printedReceive = True
+                if j in self.data.dict_equipments.keys():
+                  req_name_str = "unidades de " + self.data.data_reader.get_equipment_name(
+                    self.data.dict_equipments[j])
+                elif j in self.data.dict_staff.keys():
+                  req_name_str = "profissionais do time " + self.data.data_reader.get_staff_team(
+                    self.data.dict_staff[j])
+                elif j in self.data.dict_consumables.keys():
+                  req_name_str = "unidades de " + self.data.data_reader.get_consumable_name(
+                    self.data.dict_consumables[j])
                 html_content += """
 <div class="clear-box content">
-    {} unidades do requisito {} do Hospital {}
-</div>""".format(int(pyo.value(self.model.v[j, l, i])), j, l)
+    {} {} do Hospital {}
+</div>""".format(int(pyo.value(self.model.v[j, l, i])), req_name_str, l)
         if printedReceive:
           html_content += """
 </div>"""
