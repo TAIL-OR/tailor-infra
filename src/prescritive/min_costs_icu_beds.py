@@ -6,6 +6,7 @@ class Data:
     read_data = ReadData()
 
     self.F = list(range(len(read_data.get_hospital_ids()))) # F: set of facilities
+    self.dict_hospitals = {id: iter for iter, id in enumerate(read_data.get_hospital_ids())}
     
     self.K = [] # K: built facilities
     for iter, id in enumerate(read_data.get_hospital_ids()):
@@ -221,8 +222,7 @@ class Model:
     budget = pyo.value(self.model.objective)
     num_hospitals = len([i for i in self.model.F if pyo.value(self.model.y[i]) > 0])
     added_beds = sum([int(pyo.value(self.model.x[i]) - min([self.data.a[i][j]/self.data.n[j]
-      for j in self.model.E + self.model.I + self.model.S])) for i in self.model.F if
-      pyo.value(self.model.y[i]) > 0])
+      for j in self.model.R + self.model.U])) for i in self.model.F if pyo.value(self.model.y[i]) > 0])
     
     html_content = """
 <!DOCTYPE html>
@@ -367,8 +367,7 @@ body {
         <strong> Construção: </strong> {}
     </div>""".format(self.data.c[i])
 
-        cur_beds = min([self.data.a[i][j] / self.data.n[j] for j in self.model.E + self.model.I +
-          self.model.S])
+        cur_beds = min([self.data.a[i][j] / self.data.n[j] for j in self.model.R + self.model.U])
         html_content += """
     <div class="clear-box content">
       <strong> Leitos de UTI totais: </strong> {}
@@ -378,161 +377,76 @@ body {
     </div>""".format(int(pyo.value(self.model.x[i])), int(pyo.value(self.model.x[i]) - cur_beds))
 
         printedAcquire = False
-        for j in self.model.E:
+        for j in self.model.R + self.model.U:
           if pyo.value(self.model.z[i, j]) > 0:
             if not printedAcquire:
               html_content += """
     <div class="clear-box content">
       <strong> Adquirir: </strong>"""
               printedAcquire = True
-          html_content += """
+            html_content += """
     <div class="clear-box content">
-      {} unidades do equipamento {}
+      {} unidades do requisito {}
     </div>""".format(int(pyo.value(self.model.z[i, j])), j)
-
-        for j in self.model.I:
-          if pyo.value(self.model.z[i, j]) > 0:
-            if not printedAcquire:
-              html_content += """
-    <div class="clear-box content">
-        <strong> Adquirir: </strong>"""
-              printedAcquire = True
-          html_content += """
-      <div class="clear-box content">
-          {} unidades da infraestrutura {}
-      </div>""".format(int(pyo.value(self.model.z[i, j])), j)
-
-        for j in self.model.S:
-          if pyo.value(self.model.z[i, j]) > 0:
-            if not printedAcquire:
-              html_content += """
-    <div class="clear-box content">
-        <strong> Adquirir: </strong>"""
-              printedAcquire = True
-          html_content += """
-      <div class="clear-box content">
-          {} profissionais para o time {}
-      </div>""".format(int(pyo.value(self.model.z[i, j])), j)
-
         if printedAcquire:
           html_content += """
-</div>
-"""
+</div>"""
 
         printedRepair = False
-        for j in self.model.E:
+        for j in self.model.R:
           if pyo.value(self.model.w[i, j]) > 0:
             if not printedRepair:
               html_content += """
 <div class="clear-box content">
-    <strong> Reparar: </strong>
-"""
+    <strong> Reparar: </strong>"""
               printedRepair = True
-          html_content += """
+            html_content += """
 <div class="clear-box content">
-    {} unidades do equipamento {}
-</div>
-""".format(int(pyo.value(self.model.w[i, j])), j)
-
-        for j in self.model.I:
-          if pyo.value(self.model.w[i, j]) > 0:
-            if not printedRepair:
-              html_content += """
-<div class="clear-box content">
-    <strong> Reparar: </strong>
-"""
-              printedRepair = True
-          html_content += """
-<div class="clear-box content">
-    {} unidades da infraestrutura {}
-</div>
-""".format(int(pyo.value(self.model.w[i, j])), j)
-
+    {} unidades do requisito {}
+</div>""".format(int(pyo.value(self.model.w[i, j])), j)
         if printedRepair:
           html_content += """
-</div>
-"""
+</div>"""
 
         printedTransfer = False
-        for j in self.model.E:
+        for j in self.model.R + self.model.U:
           for l in self.model.F:
             if l != i:
               if pyo.value(self.model.v[j, i, l]) > 0:
                 if not printedTransfer:
                   html_content += """
 <div class="clear-box content">
-    <strong> Transferir: </strong>
-"""
+    <strong> Transferir: </strong>"""
                   printedTransfer = True
-              html_content += """
+                html_content += """
 <div class="clear-box content">
-    {} unidades do equipamento {} ao Hospital {}
-</div>
-""".format(int(pyo.value(self.model.v[j, i, l])), j, l)
-
-        for j in self.model.S:
-          for l in self.model.F:
-            if l != i:
-              if pyo.value(self.model.v[j, i, l]) > 0:
-                if not printedTransfer:
-                  html_content += """
-<div class="clear-box content">
-    <strong> Transferir: </strong>
-"""
-                  printedTransfer = True
-              html_content += """
-<div class="clear-box content">
-    {} profissionais para o time {} do Hospital {}
-</div>
-""".format(int(pyo.value(self.model.v[j, i, l])), j, l)
-
+    {} unidades do requisito {} ao Hospital {}
+</div>""".format(int(pyo.value(self.model.v[j, i, l])), j, l)
         if printedTransfer:
           html_content += """
-</div>
-"""
+</div>"""
 
         printedReceive = False
-        for j in self.model.E:
+        for j in self.model.R + self.model.U:
           for l in self.model.F:
             if l != i:
               if pyo.value(self.model.v[j, l, i]) > 0:
                 if not printedReceive:
                   html_content += """
 <div class="clear-box content">
-    <strong> Receber: </strong>
-"""
+    <strong> Receber: </strong>"""
                   printedReceive = True
-              html_content += """
+                html_content += """
 <div class="clear-box content">
-    {} unidades do equipamento {} do Hospital {}
-</div>
-""".format(int(pyo.value(self.model.v[j, l, i])), j, l)
-
-        for j in self.model.S:
-          for l in self.model.F:
-            if l != i:
-              if pyo.value(self.model.v[j, l, i]) > 0:
-                if not printedReceive:
-                  html_content += """
-<div class="clear-box content">
-    <strong> Receber: </strong>
-"""
-                  printedReceive = True
-              html_content += """
-<div class="clear-box content">
-    {} profissionais do time {} do Hospital {}
-</div>
-""".format(int(pyo.value(self.model.v[j, l, i])), j, l)
-
+    {} unidades do requisito {} do Hospital {}
+</div>""".format(int(pyo.value(self.model.v[j, l, i])), j, l)
         if printedReceive:
           html_content += """
-</div>
-"""
+</div>"""
 
         html_content += """
 </div>
-</div>
-"""
+</div>"""
 
     html_content += """
 </div>
@@ -545,13 +459,12 @@ body {
     <img src="figures/footer.png" alt="Footer">
 </div>
 </footer>
-</html>
-"""
+</html>"""
     return html_content
   
 def run_model(demand):
   model = Model(Data(demand))
-  # with open('output.html', 'w') as file:
-  #   file.write(model.to_html())
+  with open('output.html', 'w') as file:
+    file.write(model.to_html())
 
 run_model(50)
