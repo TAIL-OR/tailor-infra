@@ -13,6 +13,7 @@ import os
 from datetime import datetime
 import json
 import random
+from time import sleep
 import calendar
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -55,8 +56,9 @@ class Predictive:
 
     def get_train_test(self):
         two_months_ago = self.max_date - pd.DateOffset(months=2)
-        train = self.dataset[self.dataset['ds'] <= two_months_ago]
-        test = self.dataset[self.dataset['ds'] > two_months_ago]
+        data_to_train = self.dataset.drop(columns=['death_cnt'])
+        train = data_to_train[data_to_train['ds'] <= two_months_ago]
+        test = data_to_train[data_to_train['ds'] > two_months_ago]
         return train, test
 
     def wmape(self, y_true, y_pred):
@@ -102,24 +104,27 @@ class Predictive:
         data = pd.read_csv(path)
         data = data.rename(columns= {'date': 'ds', 'case_cnt': 'y', 'ra': 'unique_id'})
         data['ds'] = pd.to_datetime(data['ds'])
-        data = data.sort_values(by=['unique_id', 'ds']).groupby('unique_id').apply(lambda x: x.fillna(method='ffill'))
+        
+        data = data.sort_values(by=['unique_id', 'ds'])
+        
+        data = data.groupby('unique_id').apply(lambda x: x.fillna(method='ffill')).reset_index(drop=True)
         data['is_holiday'] = data['ds'].dt.date.apply(lambda x: 1 if x in br_holidays else 0)
 
         return data
 
     def objective(self, trial):
-        learning_rate = trial.suggest_loguniform('learning_rate', 1e-3, 1e-1)
+        learning_rate = trial.suggest_float('learning_rate', 1e-3, 1e-1, log=True)
         lags = trial.suggest_int('lags', 14, 56, step=7)# step means we only try multiples of 7 starting from 14
-        colsample_bytree = trial.suggest_uniform('colsample_bytree', 0.1, 1.0)
+        colsample_bytree = trial.suggest_float('colsample_bytree', 0.1, 1.0)
 
         # LightGBM
         num_leaves = trial.suggest_int('num_leaves', 2, 256)
         min_data_in_leaf = trial.suggest_int('min_data_in_leaf', 1, 100)
-        bagging_fraction = trial.suggest_uniform('bagging_fraction', 0.1,1.0)
+        bagging_fraction = trial.suggest_float('bagging_fraction', 0.1,1.0)
 
         # XGBoost
         min_child_weight = trial.suggest_int('min_child_weight', 1, 10)
-        subsample = trial.suggest_uniform('subsample', 0.1, 1.0)
+        subsample = trial.suggest_float('subsample', 0.1, 1.0)
         max_depth = trial.suggest_int('max_depth', 3, 10)
 
         models = self.models_({
@@ -141,6 +146,8 @@ class Predictive:
         return error_lgbm, error_xgb
 
     def optimize(self):
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        logging.info("Optimizing hyperparameters with Optuna...")
         
         if os.path.getsize(os.path.join(data_path, 'last_best_params.json')) > 0:
             self.best_params = self.get_bests_from_json()
@@ -160,6 +167,7 @@ class Predictive:
         forecast = instances.predict(h=self.valid_horizon)
         forecast = forecast.merge(self.valid[['unique_id', 'ds', 'y']], on=['unique_id', 'ds'], how='left')
         forecast['y'] = forecast['y'].fillna(0)
+        forecast['y'] = forecast['y'].astype(int)
         return forecast
     
     def metrics(self, forecast):
@@ -204,37 +212,52 @@ class Predictive:
     def predict(self):
         model = self.models_(self.best_params)
         instances = self.create_instances(model, self.best_params['lags'])
-        instances.fit(self.dataset, id_col='unique_id', target_col='y', time_col='ds', static_features=self.static_features)
+        dataset_to_predict = self.dataset[['unique_id', 'ds', 'y', 'is_holiday']]
+        instances.fit(dataset_to_predict, id_col='unique_id', target_col='y', time_col='ds', static_features=self.static_features)
         forecast = instances.predict(h=self.HORIZON)
 
         if self.best_models is not None:
-            final_dataset = pd.DataFrame()
+            final_datasets = []
             for ra in forecast['unique_id'].unique():
                 model = self.best_models[ra]
-                final_dataset = final_dataset.append(forecast[forecast['unique_id'] == ra][['unique_id', 'ds', model]])
+                temp_df = temp_df = forecast.loc[forecast['unique_id'] == ra, ['unique_id', 'ds', model]].copy() 
+                final_datasets.append(temp_df)
+            
+            final_dataset = pd.concat(final_datasets, ignore_index=True)
 
             final_dataset['y_hat'] = final_dataset['XGBRegressor'].combine_first(final_dataset['LGBMRegressor'])
             final_dataset = final_dataset[['unique_id', 'ds', 'y_hat']]
+            final_dataset['y_hat'] = final_dataset['y_hat'].astype(int)
             final_dataset.to_csv(os.path.join(data_path, 'pred_results', 'forecast.csv'), index=False)
 
         logging.info(f"Predictions for LightGBM and XGBoost saved in {data_path}/pred_results")
     
     def read_forecast(self):
-        self.forecast = pd.read_csv(os.path.join(data_path, 'pred_results', 'forecast.csv'))
+        file_path = os.path.join(data_path, 'pred_results', 'forecast.csv')
+        try:
+            self.forecast = pd.read_csv(file_path)
+        except:
+            self.forecast = pd.DataFrame(columns=['unique_id', 'ds', 'y_hat'])
         
-    def contamination(self, horizon):
+    def contamination(self, horizon, prescriptive=False):
+        data = pd.DataFrame()
+
         if horizon < 0:
             today = pd.to_datetime('today')
             start_date = today + pd.DateOffset(months=horizon)
-            end_date = today
+            month_end_day = calendar.monthrange(start_date.year, start_date.month)[1]
+            end_date = start_date.replace(day=month_end_day)
+
             data = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= end_date)]
-            data = data[['unique_id', 'ds', 'y']].reset_index(drop=True)
+            data['transmission_rate'] = random.uniform(0.5, 1.0)
+            data = data[['unique_id', 'ds', 'y', 'death_cnt', 'transmission_rate']].reset_index(drop=True)
+
         elif horizon == 0:
             today = pd.to_datetime('today')
             start_date = today.replace(day=1)
-            end_date = today
-            data = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= end_date)]
-            data = data[['unique_id', 'ds', 'y']].reset_index(drop=True)
+            data = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= today)]
+            data['transmission_rate'] = random.uniform(0.5, 1.0)
+            data = data[['unique_id', 'ds', 'y', 'death_cnt', 'transmission_rate']].reset_index(drop=True)
         else:
             today = pd.to_datetime('today')
             
@@ -244,31 +267,34 @@ class Predictive:
             self.read_forecast()
             forecast_max_date = pd.to_datetime(self.forecast['ds'].max())
 
-            print("Future date: ", future_date)
-            print("Forecast max date: ", forecast_max_date)
-
             if future_date <= forecast_max_date:
-                print("Using dataset")
+                print("Forecast already exists")
                 start_date = future_date.replace(day=1)
-                print("Start date: ", start_date)
-                print("End date: ", future_date)
-                data = self.forecast[(pd.to_datetime(self.forecast['ds']) >= start_date) & (pd.to_datetime(self.forecast['ds']) <= future_date)]
+                print(f"\tStart date: {start_date}\t|\tFuture date: {future_date}")
+                
+                data = self.forecast.loc[(pd.to_datetime(self.forecast['ds']) >= start_date) & (pd.to_datetime(self.forecast['ds']) <= future_date)].copy()
+
 
             else:
-                print("Using forecast")
+                print("Forecast doesn't exist, creating new forecast")
                 self.best_params = self.optimize()
                 self.train_for_metrics()
 
                 self.HORIZON = (future_date - self.max_date).days + 1
                 self.predict()
                 self.contamination(horizon)
+
             data['deaths'] = None
             data['transmission_rate'] = random.uniform(0.5, 1.0)
+
+        
+        if prescriptive:
+            total_cases = 'y' if 'y' in data.columns else 'y_hat'
+            data = data[['ds', total_cases]]
+            data = data.rename(columns={'ds': 'date', total_cases: 'cases'})
+            data['date'] = pd.to_datetime(data['date'])
+            data = data.groupby(data['date'].dt.to_period('M')).agg({'cases': 'sum'}).reset_index()
+            data['date'] = data['date'].dt.to_timestamp().dt.strftime('%Y-%m-%d')
+            return data.to_dict(orient='records')[0]
         
         return data.to_json(orient='records', date_format='iso')
-
-# if __name__ == '__main__':
-#     p = Predictive()
-#     result = p.contamination(1)
-
-#     print(result)
