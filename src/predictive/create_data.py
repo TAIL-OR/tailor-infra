@@ -5,7 +5,12 @@ import re
 import subprocess
 import os
 
-if not os.path.exists('../data/covid_data.db') or os.path.getsize('../data/covid_data.db') == 0:
+current_directory = os.path.dirname(os.path.abspath(__file__))
+data_path = os.path.join(current_directory, 'data')
+
+database_file = os.path.join(data_path, 'covid_data.db')
+
+if not os.path.exists(database_file) or os.path.getsize(database_file) == 0:
     print('Criando banco de dados...')
     subprocess.run(['python3', 'create_db.py'])
 else:
@@ -43,7 +48,7 @@ def clean_names(name):
 
 
 # Conecte ao banco de dados
-conn = sqlite3.connect('../data/covid_data.db')
+conn = sqlite3.connect(database_file)
 
 # Crie um cursor
 c = conn.cursor()
@@ -63,7 +68,7 @@ df['province'] = df['province'].apply(lambda x: clean_names(x))
 df = df[~df['province'].isin(ras_to_exclude)]
 df['province'] = df['province'].apply(lambda x: remover_acentos(x.replace(' ', '_')).lower().replace('/', '_') if pd.notnull(x) else None)
 df = df.rename(columns={'province': 'ra'})
-df[['date', 'ra', 'case_cnt']].to_csv('../data/dados-gerais.csv', index=False)
+df[['date', 'ra', 'case_cnt', 'death_cnt']].to_csv(os.path.join(data_path, 'dados-gerais.csv'), index=False)
 
 conn.close()
 

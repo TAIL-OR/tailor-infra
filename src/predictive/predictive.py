@@ -55,8 +55,9 @@ class Predictive:
 
     def get_train_test(self):
         two_months_ago = self.max_date - pd.DateOffset(months=2)
-        train = self.dataset[self.dataset['ds'] <= two_months_ago]
-        test = self.dataset[self.dataset['ds'] > two_months_ago]
+        data_to_train = self.dataset[['unique_id', 'ds', 'y']]
+        train = data_to_train[data_to_train['ds'] <= two_months_ago]
+        test = data_to_train[data_to_train['ds'] > two_months_ago]
         return train, test
 
     def wmape(self, y_true, y_pred):
@@ -228,13 +229,15 @@ class Predictive:
             start_date = today + pd.DateOffset(months=horizon)
             end_date = today
             data = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= end_date)]
-            data = data[['unique_id', 'ds', 'y']].reset_index(drop=True)
+            data['transmission_rate'] = random.uniform(0.5, 1.0)
+            data = data[['unique_id', 'ds', 'y', 'death_cnt', 'transmission_rate']].reset_index(drop=True)
         elif horizon == 0:
             today = pd.to_datetime('today')
             start_date = today.replace(day=1)
             end_date = today
             data = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= end_date)]
-            data = data[['unique_id', 'ds', 'y']].reset_index(drop=True)
+            data['transmission_rate'] = random.uniform(0.5, 1.0)
+            data = data[['unique_id', 'ds', 'y', 'death_cnt', 'transmission_rate']].reset_index(drop=True)
         else:
             today = pd.to_datetime('today')
             
@@ -267,8 +270,8 @@ class Predictive:
         
         return data.to_json(orient='records', date_format='iso')
 
-# if __name__ == '__main__':
-#     p = Predictive()
-#     result = p.contamination(1)
+if __name__ == '__main__':
+    p = Predictive()
+    result = p.contamination(-3)
 
-#     print(result)
+    print(result)
