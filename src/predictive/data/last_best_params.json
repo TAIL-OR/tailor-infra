@@ -1,1 +1,1 @@
-{"learning_rate": 0.07055088803396713, "lags": 14, "colsample_bytree": 0.4964119646928845, "num_leaves": 54, "min_data_in_leaf": 8, "bagging_fraction": 0.8057903908180004, "min_child_weight": 9, "subsample": 0.6177341947428091, "max_depth": 8}
+{"learning_rate": 0.05038299093905693, "lags": 56, "colsample_bytree": 0.853041175671834, "num_leaves": 208, "min_data_in_leaf": 35, "bagging_fraction": 0.4655607417536468, "min_child_weight": 2, "subsample": 0.2788770438889875, "max_depth": 9}
