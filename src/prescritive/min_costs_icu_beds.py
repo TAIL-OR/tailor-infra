@@ -2,7 +2,7 @@ import pyomo.environ as pyo
 from read_data import ReadData
 
 class Data:
-  def __init__(self):
+  def __init__(self, demand):
     read_data = ReadData()
 
     self.F = list(range(len(read_data.get_hospital_ids()))) # F: set of facilities
@@ -17,7 +17,7 @@ class Data:
     self.U = list(range(len(self.R), len(self.R) + len(read_data.get_staff_ids()))) # N: set of unrepairable requirements
     self.U += list(range(len(self.R) + len(self.U), len(self.R) + len(self.U) + len(read_data.get_staff_ids())))
     
-    self.d = 50 # d: demand of ICU beds
+    self.d = demand # d: demand of ICU beds
     
     self.c = [] # c: cost of building facilities
     for iter, id in enumerate(read_data.get_hospital_ids()):
@@ -553,9 +553,9 @@ body {
 """
     return html_content
   
-def run_model():
-  model = Model(Data())
+def run_model(demand):
+  model = Model(Data(demand))
   # with open('output.html', 'w') as file:
   #   file.write(model.to_html())
 
-run_model()
+run_model(50)
