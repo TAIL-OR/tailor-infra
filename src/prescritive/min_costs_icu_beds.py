@@ -388,13 +388,25 @@ body {
               printedAcquire = True
             req_name_str = ""
             if j in self.data.dict_equipments.keys():
-              req_name_str = "unidades de " + self.data.data_reader.get_equipment_name(
+              if pyo.value(self.model.z[i, j]) > 1:
+                req_name_str = "unidades"
+              else:
+                req_name_str = "unidade"
+              req_name_str += " de " + self.data.data_reader.get_equipment_name(
                 self.data.dict_equipments[j])
             elif j in self.data.dict_staff.keys():
-              req_name_str = "profissionais para o time " + self.data.data_reader.get_staff_team(
+              if pyo.value(self.model.z[i, j]) > 1:
+                req_name_str = "profissionais"
+              else:
+                req_name_str = "profissional"
+              req_name_str += " para o time " + self.data.data_reader.get_staff_team(
                 self.data.dict_staff[j])
             elif j in self.data.dict_consumables.keys():
-              req_name_str = "unidades de " + self.data.data_reader.get_consumable_name(
+              if pyo.value(self.model.z[i, j]) > 1:
+                req_name_str = "unidades"
+              else:
+                req_name_str = "unidade"
+              req_name_str += " de " + self.data.data_reader.get_consumable_name(
                 self.data.dict_consumables[j])
             html_content += """
     <div class="clear-box content">
@@ -414,7 +426,11 @@ body {
               printedRepair = True
             req_name_str = ""
             if j in self.data.dict_equipments.keys():
-              req_name_str = "unidades de " + self.data.data_reader.get_equipment_name(
+              if pyo.value(self.model.w[i, j]) > 1:
+                req_name_str = "unidades"
+              else:
+                req_name_str = "unidade"
+              req_name_str += " de " + self.data.data_reader.get_equipment_name(
                 self.data.dict_equipments[j])
             html_content += """
 <div class="clear-box content">
@@ -435,13 +451,25 @@ body {
     <strong> Transferir: </strong>"""
                   printedTransfer = True
                 if j in self.data.dict_equipments.keys():
-                  req_name_str = "unidades de " + self.data.data_reader.get_equipment_name(
+                  if pyo.value(self.model.v[j, i, l]) > 1:
+                    req_name_str = "unidades"
+                  else:
+                    req_name_str = "unidade"
+                  req_name_str += " de " + self.data.data_reader.get_equipment_name(
                     self.data.dict_equipments[j])
                 elif j in self.data.dict_staff.keys():
-                  req_name_str = "profissionais do time " + self.data.data_reader.get_staff_team(
+                  if pyo.value(self.model.v[j, i, l]) > 1:
+                    req_name_str = "profissionais"
+                  else:
+                    req_name_str = "profissional"
+                  req_name_str += " do time " + self.data.data_reader.get_staff_team(
                     self.data.dict_staff[j])
                 elif j in self.data.dict_consumables.keys():
-                  req_name_str = "unidades de " + self.data.data_reader.get_consumable_name(
+                  if pyo.value(self.model.v[j, i, l]) > 1:
+                    req_name_str = "unidades"
+                  else:
+                    req_name_str = "unidade"
+                  req_name_str += " de " + self.data.data_reader.get_consumable_name(
                     self.data.dict_consumables[j])
                 html_content += """
 <div class="clear-box content">
@@ -462,13 +490,25 @@ body {
     <strong> Receber: </strong>"""
                   printedReceive = True
                 if j in self.data.dict_equipments.keys():
-                  req_name_str = "unidades de " + self.data.data_reader.get_equipment_name(
+                  if pyo.value(self.model.v[j, i, l]) > 1:
+                    req_name_str = "unidades"
+                  else:
+                    req_name_str = "unidade"
+                  req_name_str += " de " + self.data.data_reader.get_equipment_name(
                     self.data.dict_equipments[j])
                 elif j in self.data.dict_staff.keys():
-                  req_name_str = "profissionais do time " + self.data.data_reader.get_staff_team(
+                  if pyo.value(self.model.v[j, i, l]) > 1:
+                    req_name_str = "profissionais"
+                  else:
+                    req_name_str = "profissional"
+                  req_name_str += " do time " + self.data.data_reader.get_staff_team(
                     self.data.dict_staff[j])
                 elif j in self.data.dict_consumables.keys():
-                  req_name_str = "unidades de " + self.data.data_reader.get_consumable_name(
+                  if pyo.value(self.model.v[j, i, l]) > 1:
+                    req_name_str = "unidades"
+                  else:
+                    req_name_str = "unidade"
+                  req_name_str += " de " + self.data.data_reader.get_consumable_name(
                     self.data.dict_consumables[j])
                 html_content += """
 <div class="clear-box content">
