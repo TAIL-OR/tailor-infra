@@ -364,10 +364,11 @@ body {
     ))
 
         if i not in self.model.K:
+          construction_cost_str = str(f'{self.data.c[i]:,}').replace('.', ',')
           html_content += """
     <div class="clear-box content">
-        <strong> Construção: </strong> {}
-    </div>""".format(self.data.c[i])
+        <strong> Construção: </strong> R$ {}
+    </div>""".format(construction_cost_str.replace(',', '.', construction_cost_str.count(',') - 1))
 
         cur_beds = min([self.data.a[i][j] / self.data.n[j] for j in self.model.R + self.model.U])
         html_content += """
@@ -473,8 +474,9 @@ body {
                     self.data.dict_consumables[j])
                 html_content += """
 <div class="clear-box content">
-    {} {} ao Hospital {}
-</div>""".format(int(pyo.value(self.model.v[j, i, l])), req_name_str, l)
+    {} {} ao {}
+</div>""".format(int(pyo.value(self.model.v[j, i, l])), req_name_str,
+  self.data.data_reader.get_hospital_name(self.data.dict_hospitals[l]))
         if printedTransfer:
           html_content += """
 </div>"""
@@ -490,21 +492,21 @@ body {
     <strong> Receber: </strong>"""
                   printedReceive = True
                 if j in self.data.dict_equipments.keys():
-                  if pyo.value(self.model.v[j, i, l]) > 1:
+                  if pyo.value(self.model.v[j, l, i]) > 1:
                     req_name_str = "unidades"
                   else:
                     req_name_str = "unidade"
                   req_name_str += " de " + self.data.data_reader.get_equipment_name(
                     self.data.dict_equipments[j])
                 elif j in self.data.dict_staff.keys():
-                  if pyo.value(self.model.v[j, i, l]) > 1:
+                  if pyo.value(self.model.v[j, l, i]) > 1:
                     req_name_str = "profissionais"
                   else:
                     req_name_str = "profissional"
                   req_name_str += " do time " + self.data.data_reader.get_staff_team(
                     self.data.dict_staff[j])
                 elif j in self.data.dict_consumables.keys():
-                  if pyo.value(self.model.v[j, i, l]) > 1:
+                  if pyo.value(self.model.v[j, l, i]) > 1:
                     req_name_str = "unidades"
                   else:
                     req_name_str = "unidade"
@@ -512,8 +514,9 @@ body {
                     self.data.dict_consumables[j])
                 html_content += """
 <div class="clear-box content">
-    {} {} do Hospital {}
-</div>""".format(int(pyo.value(self.model.v[j, l, i])), req_name_str, l)
+    {} {} do {}
+</div>""".format(int(pyo.value(self.model.v[j, l, i])), req_name_str,
+  self.data.data_reader.get_hospital_name(self.data.dict_hospitals[l]))
         if printedReceive:
           html_content += """
 </div>"""
@@ -541,4 +544,4 @@ def run_model(demand):
   with open('output.html', 'w') as file:
     file.write(model.to_html())
 
-run_model(50)
+run_model(70)
