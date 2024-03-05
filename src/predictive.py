@@ -26,6 +26,7 @@ class Predictive:
         logging.basicConfig(filename=logger_filename, level=logging.INFO,
                             format="%(asctime)s | %(levelname)s | %(message)s",
                             datefmt="%Y-%m-%d %H:%M:%S")
+        
 
         self.N_TRIALS = 30
         self.HORIZON = 30

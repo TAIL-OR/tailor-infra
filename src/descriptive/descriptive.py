@@ -1,4 +1,4 @@
-from data_statistics import Statistics
+from src.descriptive.data_statistics import Statistics
 
 class Descriptive:
     def __init__(self):
@@ -46,7 +46,7 @@ class Descriptive:
             'waitlist': waitlist_last_nine_months
         }
         
-        response = {"case_chart": case_chart, "death_chart": death_chart, "vaccination_chart": vaccination,
+        response = {"case_chart": case_chart, "death_chart": death_chart, "vaccination_chart": vaccination_chart,
                     "vaccine_dose_chart": vaccine_dose_chart, "transmission_rate_chart": transmission_rate_chart, "contamination_chart": contamination_chart,
                     "symtom_chart": syntom_chart, "bed_occupancy_chart": bed_occupancy_chart}
         
