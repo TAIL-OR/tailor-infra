@@ -80,7 +80,7 @@ class Data:
       else:
         self.m.append([0]*len(self.R))
     
-    with open('src/data/transfer_costs.txt', 'r') as file_object:
+    with open(path.join('src','data','transfer_costs.txt'), 'r') as file_object:
       self.t = [] # t: transfer cost of each requirement among hospitals
       for _ in self.R + self.U:
         costs_for_req_j = []
@@ -339,20 +339,20 @@ body {
 </div>
 <div class="hospital-container">
   <div class="image-box">
-    <img src=""" + '"' + path.abspath('src/figures/coins.png') + '"' + """alt="Stack of coins">
+    <img src=""" + '"' + path.abspath(path.join('src','figures','coins.png')) + '"' + """alt="Stack of coins">
     <div class="content">Or&ccedil;amento previsto</div>
     <div class="content"> R$ """
     budget_str = str(f'{budget:,}').replace('.', ',')
     html_content += budget_str.replace(',', '.', budget_str.count(',') - 1) + """ </div>
     </div>
     <div class="image-box">
-      <img src=""" + '"' + path.abspath('src/figures/hospital.png') + '"' + """alt="Hospital">
+      <img src=""" + '"' + path.abspath(path.join('src','figures','hospital.png')) + '"' + """alt="Hospital">
       <div class="content">Hospitais beneficiados</div> 
       <div class="content"> {} </div>
     </div>""".format(num_hospitals)
     html_content += """
     <div class="image-box">
-      <img src=""" + '"' + path.abspath('src/figures/hospital_bed.png') + '"'
+      <img src=""" + '"' + path.abspath(path.join('src','figures','hospital_bed.png')) + '"'
     html_content += """ alt="Hospital beds">
       <div class="content">Leitos adicionados</div>
       <div class="content"> {} </div>
@@ -546,9 +546,9 @@ body {
     <img src={} alt="Footer">
 </div>
 </footer>
-</html>""".format('"' + path.abspath('src/figures/sus.png') + '"',
-  '"' + path.abspath('src/figures/20_years.png') + '"',
-  '"' + path.abspath('src/figures/footer.png') + '"')
+</html>""".format('"' + path.abspath(path.join('src','figures','sus.png')) + '"',
+  '"' + path.abspath(path.join('src','figures','20_years.png')) + '"',
+  '"' + path.abspath(path.join('src','figures','footer.png')) + '"')
     
     return html_content
   
