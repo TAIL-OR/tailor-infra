@@ -5,7 +5,6 @@ from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
 from window_ops.rolling import rolling_mean, rolling_max, rolling_min
 import optuna
-import matplotlib.pyplot as plt
 import holidays
 import logging
 from sklearn.metrics import mean_absolute_error
@@ -13,7 +12,6 @@ import os
 from datetime import datetime
 import json
 import random
-from time import sleep
 import calendar
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -297,4 +295,5 @@ class Predictive:
             data['date'] = data['date'].dt.to_timestamp().dt.strftime('%Y-%m-%d')
             return data.to_dict(orient='records')[0]
         
+        data['ds'] = pd.to_datetime(data['ds']).dt.strftime('%Y-%m-%d')
         return data.to_json(orient='records', date_format='iso')
