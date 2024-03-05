@@ -1,6 +1,6 @@
 from flask import Flask, request, Response, jsonify
 from src.descriptive.descriptive import Descriptive
-from src.predictive.predictive import Predictive
+from src.predictive import Predictive
 
 app = Flask(__name__)
 
