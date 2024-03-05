@@ -1,6 +1,6 @@
 import pyomo.environ as pyo
-from read_data import ReadData
-from predictive import Predictive
+from .read_data import ReadData
+from .predictive import Predictive
 
 class Data:
   def __init__(self, demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
@@ -75,7 +75,7 @@ class Data:
       else:
         self.m.append([0]*len(self.R))
     
-    with open('data/transfer_costs.txt', 'r') as file_object:
+    with open('src/data/transfer_costs.txt', 'r') as file_object:
       self.t = [] # t: transfer cost of each requirement among hospitals
       for _ in self.R + self.U:
         costs_for_req_j = []
@@ -546,6 +546,6 @@ body {
 def run_model(demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
   model = Model(Data(demand, equipment_rates, staff_rates, consumable_rates))
   with open('output.html', 'w') as file:
+    html = model.to_html()
     file.write(model.to_html())
-
-run_model(70)
+  return html
