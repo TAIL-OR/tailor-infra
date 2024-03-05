@@ -5,6 +5,8 @@ class Descriptive:
         self.statistics = Statistics()
         
     def describe_region_statistics(self):
+        pontuation = self.statistics
+
         total_cases = self.statistics.region_get_total_cases()
         number_active_cases = self.statistics.region_get_active_cases()
         number_recovered_cases = self.statistics.region_get_recover_cases()
