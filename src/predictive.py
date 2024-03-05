@@ -279,11 +279,11 @@ class Predictive:
         if prescriptive:
             total_cases = 'y' if 'y' in self.data_to_export.columns else 'y_hat'
             data = self.data_to_export[['ds', total_cases]]
-            data = data.rename(columns={'ds': 'date', total_cases: 'demand'})
+            data = data.rename(columns={'ds': 'date', total_cases: 'cases'})
             data['date'] = pd.to_datetime(data['date'])
-            data = data.groupby(data['date'].dt.to_period('M')).agg({'demand': 'sum'}).reset_index()
+            data = data.groupby(data['date'].dt.to_period('M')).agg({'cases': 'max'}).reset_index()
             data['date'] = data['date'].dt.to_timestamp().dt.strftime('%Y-%m-%d')
-            return data.to_json(orient='records', date_format='iso')
+            return data.to_dict(orient='records')
         
         
         return self.data_to_export.to_json(orient='records', date_format='iso')

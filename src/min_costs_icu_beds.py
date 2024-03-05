@@ -1,6 +1,8 @@
 import pyomo.environ as pyo
-from .read_data import ReadData
-from .predictive import Predictive
+import math
+
+from read_data import ReadData
+from predictive import Predictive
 
 class Data:
   def __init__(self, demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
@@ -28,7 +30,9 @@ class Data:
     if demand:
       self.d = demand # d: demand of ICU beds
     else:
-      self.d = Predictive().contamination(1, True)['demand']
+      self.d = math.ceil(Predictive().contamination(1, True)[0]['cases']*11.6/10)
+        # "[...] permanência média na UTI de 11,6 dias." Source: https://www.cnnbrasil.com.br/saude/internacoes-por-covid-19-duram-em-media-22-dias-aponta-pesquisa/
+        # https://noticias.uol.com.br/saude/ultimas-noticias/redacao/2020/03/17/somente-1-em-cada-10-casos-do-novo-coronavirus-estao-hospitalizados.htm
     
     self.c = [] # c: cost of building facilities
     for iter, id in enumerate(self.data_reader.get_hospital_ids()):

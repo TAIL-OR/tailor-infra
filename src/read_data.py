@@ -236,7 +236,8 @@ class ReadData:
     return self.consumables["necessary_rates"][id]
   
   def get_equipment_quantity(self, hospital_id, equipment_id):
-    return self.hospital_equipments[hospital_id][equipment_id][0]
+    return (self.hospital_equipments[hospital_id][equipment_id][0] -
+      self.hospital_equipments[hospital_id][equipment_id][1])
   
   def get_equipment_maintenance_quantity(self, hospital_id, equipment_id):
     return self.hospital_equipments[hospital_id][equipment_id][1]
