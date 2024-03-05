@@ -1,4 +1,4 @@
-from src.descriptive.data_statistics import Statistics
+from .data_statistics import Statistics
 
 class Descriptive:
     def __init__(self):

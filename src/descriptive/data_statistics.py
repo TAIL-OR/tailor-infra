@@ -1,9 +1,14 @@
 import pandas as pd
 import datetime
+import os
+
+current_directory = os.path.dirname(os.path.abspath(__file__))
+parent_directory = os.path.dirname(current_directory)
+data_path = os.path.join(parent_directory, 'data')
 
 class Statistics:
     def __init__(self):
-        self.dataset = pd.read_csv('src/data/dados-abertos.csv', sep=';')
+        self.dataset = pd.read_csv(os.path.join(data_path, 'dados-abertos.csv'), sep=';')
         
     def get_last_nine_months(self):
         month = datetime.datetime.now().month

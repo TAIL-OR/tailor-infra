@@ -5,15 +5,12 @@ from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
 from window_ops.rolling import rolling_mean, rolling_max, rolling_min
 import optuna
-import matplotlib.pyplot as plt
 import holidays
-import logging
 from sklearn.metrics import mean_absolute_error
 import os
 from datetime import datetime
 import json
 import random
-from time import sleep
 import calendar
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -21,12 +18,7 @@ data_path = os.path.join(current_directory, 'data')
 
 class Predictive:
     def __init__(self):
-        
-        logger_filename = os.path.join(current_directory, 'logs', f'predictive_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log')
-        logging.basicConfig(filename=logger_filename, level=logging.INFO,
-                            format="%(asctime)s | %(levelname)s | %(message)s",
-                            datefmt="%Y-%m-%d %H:%M:%S")
-        
+        print("Predictive class initialized")
 
         self.N_TRIALS = 30
         self.HORIZON = 30
@@ -148,7 +140,6 @@ class Predictive:
 
     def optimize(self):
         optuna.logging.set_verbosity(optuna.logging.WARNING)
-        logging.info("Optimizing hyperparameters with Optuna...")
         
         if os.path.getsize(os.path.join(data_path, 'last_best_params.json')) > 0:
             self.best_params = self.get_bests_from_json()
@@ -193,7 +184,6 @@ class Predictive:
         metrics = self.calculate_metrics_for_ra(forecast)
         best_model = metrics.apply(lambda x: 'LGBMRegressor' if x['lightgbm']['mae'] < x['xgboost']['mae'] else 'XGBRegressor')
         
-        logging.info(f"Best model for each RA: {best_model}")
 
         self.best_models = best_model
         
@@ -204,9 +194,6 @@ class Predictive:
 
         metrics_ = self.metrics(forecast)
 
-        logging.info(f"Metrics for LightGBM: {metrics_['lightgbm']}")
-        logging.info(f"Metrics for XGBoost: {metrics_['xgboost']}")
-        
         for model in self.MODEL:
             self.save_csv(forecast, model)
     
@@ -230,8 +217,6 @@ class Predictive:
             final_dataset = final_dataset[['unique_id', 'ds', 'y_hat']]
             final_dataset['y_hat'] = final_dataset['y_hat'].astype(int)
             final_dataset.to_csv(os.path.join(data_path, 'pred_results', 'forecast.csv'), index=False)
-
-        logging.info(f"Predictions for LightGBM and XGBoost saved in {data_path}/pred_results")
     
     def read_forecast(self):
         file_path = os.path.join(data_path, 'pred_results', 'forecast.csv')
@@ -298,4 +283,5 @@ class Predictive:
             data['date'] = data['date'].dt.to_timestamp().dt.strftime('%Y-%m-%d')
             return data.to_dict(orient='records')[0]
         
+        data['ds'] = pd.to_datetime(data['ds']).dt.strftime('%Y-%m-%d')
         return data.to_json(orient='records', date_format='iso')

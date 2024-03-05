@@ -5,7 +5,7 @@ from src.predictive import Predictive
 app = Flask(__name__)
 
 descriptive = Descriptive()
-#predictive = Predictive()
+predictive = Predictive()
 
 @app.route('/', methods=['GET'])
 def handle_root():
