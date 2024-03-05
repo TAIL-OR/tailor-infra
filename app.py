@@ -1,11 +1,12 @@
 from flask import Flask, request, Response, jsonify
 from src.descriptive.descriptive import Descriptive
 from src.predictive import Predictive
+from src.min_costs_icu_beds import run_model
 
 app = Flask(__name__)
 
 descriptive = Descriptive()
-predictive = Predictive() 
+predictive = Predictive()
 
 @app.route('/', methods=['GET'])
 def handle_root():
@@ -19,6 +20,19 @@ def predict_contamination():
     horizon = request_data.get("horizon")
     response = predictive.contamination(horizon)
     
+    return response
+
+@app.route('/prescriptive', methods=['POST'])
+def prescriptive():
+    request_data = request.get_json()
+
+    demand = request_data.get("demand")
+    equipment_rates = request_data.get("equipment_rates")
+    staff_rates = request_data.get("staff_rates")
+    consumable_rates = request_data.get("consumable_rates")
+
+    response = run_model(demand, equipment_rates, staff_rates, consumable_rates)
+
     return response
 
 @app.route('/describe_region', methods=['GET'])
