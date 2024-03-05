@@ -38,6 +38,8 @@ class Predictive:
         self.best_models = None
         self.forecast = None
 
+        self.data_to_export = None
+
     def get_bests_from_json(self):
         try:
             best_params_json = os.path.join(data_path, 'last_best_params.json')
@@ -226,24 +228,24 @@ class Predictive:
             self.forecast = pd.DataFrame(columns=['unique_id', 'ds', 'y_hat'])
         
     def contamination(self, horizon, prescriptive=False):
-        data = pd.DataFrame()
-
+        if horizon > 3:
+            return 404
         if horizon < 0:
             today = pd.to_datetime('today')
             start_date = today + pd.DateOffset(months=horizon)
             month_end_day = calendar.monthrange(start_date.year, start_date.month)[1]
             end_date = start_date.replace(day=month_end_day)
 
-            data = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= end_date)]
-            data['transmission_rate'] = random.uniform(0.5, 1.0)
-            data = data[['unique_id', 'ds', 'y', 'death_cnt', 'transmission_rate']].reset_index(drop=True)
+            self.data_to_export = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= end_date)]
+            self.data_to_export['transmission_rate'] = [random.uniform(0.5, 1.0) for _ in range(len(self.data_to_export))]
+            self.data_to_export = self.data_to_export[['unique_id', 'ds', 'y', 'death_cnt', 'transmission_rate']].reset_index(drop=True)
 
         elif horizon == 0:
             today = pd.to_datetime('today')
             start_date = today.replace(day=1)
-            data = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= today)]
-            data['transmission_rate'] = random.uniform(0.5, 1.0)
-            data = data[['unique_id', 'ds', 'y', 'death_cnt', 'transmission_rate']].reset_index(drop=True)
+            self.data_to_export = self.dataset[(self.dataset['ds'] >= start_date) & (self.dataset['ds'] <= today)]
+            self.data_to_export['transmission_rate'] = [random.uniform(0.5, 1.0) for _ in range(len(self.data_to_export))]
+            self.data_to_export = self.data_to_export[['unique_id', 'ds', 'y', 'death_cnt', 'transmission_rate']].reset_index(drop=True)
         else:
             today = pd.to_datetime('today')
             
@@ -258,8 +260,8 @@ class Predictive:
                 start_date = future_date.replace(day=1)
                 print(f"\tStart date: {start_date}\t|\tFuture date: {future_date}")
                 
-                data = self.forecast.loc[(pd.to_datetime(self.forecast['ds']) >= start_date) & (pd.to_datetime(self.forecast['ds']) <= future_date)].copy()
-
+                self.data_to_export = self.forecast.loc[(pd.to_datetime(self.forecast['ds']) >= start_date) & (pd.to_datetime(self.forecast['ds']) <= future_date)].copy()
+                
 
             else:
                 print("Forecast doesn't exist, creating new forecast")
@@ -270,18 +272,18 @@ class Predictive:
                 self.predict()
                 self.contamination(horizon)
 
-            data['deaths'] = None
-            data['transmission_rate'] = random.uniform(0.5, 1.0)
+            self.data_to_export['deaths'] = None
+            self.data_to_export['transmission_rate'] = [random.uniform(0.5, 1.0) for _ in range(len(self.data_to_export))]
 
         
         if prescriptive:
-            total_cases = 'y' if 'y' in data.columns else 'y_hat'
-            data = data[['ds', total_cases]]
-            data = data.rename(columns={'ds': 'date', total_cases: 'cases'})
+            total_cases = 'y' if 'y' in self.data_to_export.columns else 'y_hat'
+            data = self.data_to_export[['ds', total_cases]]
+            data = data.rename(columns={'ds': 'date', total_cases: 'demand'})
             data['date'] = pd.to_datetime(data['date'])
-            data = data.groupby(data['date'].dt.to_period('M')).agg({'cases': 'sum'}).reset_index()
+            data = data.groupby(data['date'].dt.to_period('M')).agg({'demand': 'sum'}).reset_index()
             data['date'] = data['date'].dt.to_timestamp().dt.strftime('%Y-%m-%d')
-            return data.to_dict(orient='records')[0]
+            return data.to_json(orient='records', date_format='iso')
         
-        data['ds'] = pd.to_datetime(data['ds']).dt.strftime('%Y-%m-%d')
-        return data.to_json(orient='records', date_format='iso')
+        
+        return self.data_to_export.to_json(orient='records', date_format='iso')
