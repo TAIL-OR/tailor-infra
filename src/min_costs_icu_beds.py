@@ -1,9 +1,10 @@
 import pyomo.environ as pyo
 from read_data import ReadData
+from predictive import Predictive
 
 class Data:
-  def __init__(self, demand):
-    self.data_reader = ReadData()
+  def __init__(self, demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
+    self.data_reader = ReadData(equipment_rates, staff_rates, consumable_rates)
 
     self.F = list(range(len(self.data_reader.get_hospital_ids()))) # F: set of facilities
     self.dict_hospitals = {id: iter for iter, id in enumerate(self.data_reader.get_hospital_ids())}
@@ -24,7 +25,10 @@ class Data:
     self.U += list(range(len(self.R) + len(self.U), len(self.R) + len(self.U) +
       len(self.data_reader.get_consumable_ids())))
     
-    self.d = demand # d: demand of ICU beds
+    if demand:
+      self.d = demand # d: demand of ICU beds
+    else:
+      self.d = Predictive().contamination(1, True)['demand']
     
     self.c = [] # c: cost of building facilities
     for iter, id in enumerate(self.data_reader.get_hospital_ids()):
@@ -164,7 +168,7 @@ class Model:
       self.model.y_dependent_constraint.add(self.model.x[i] / self.data.u[i] <= self.model.y[i])
       self.model.y_dependent_constraint.add(self.model.y[i] <= self.model.x[i])
     
-    self.model.write('model.lp', io_options={'symbolic_solver_labels': True})
+    # self.model.write('model.lp', io_options={'symbolic_solver_labels': True})
     opt = pyo.SolverFactory('appsi_highs')
     self.results = opt.solve(self.model, tee=True)
     
@@ -364,10 +368,11 @@ body {
     ))
 
         if i not in self.model.K:
+          construction_cost_str = str(f'{self.data.c[i]:,}').replace('.', ',')
           html_content += """
     <div class="clear-box content">
-        <strong> Construção: </strong> {}
-    </div>""".format(self.data.c[i])
+        <strong> Construção: </strong> R$ {}
+    </div>""".format(construction_cost_str.replace(',', '.', construction_cost_str.count(',') - 1))
 
         cur_beds = min([self.data.a[i][j] / self.data.n[j] for j in self.model.R + self.model.U])
         html_content += """
@@ -473,8 +478,9 @@ body {
                     self.data.dict_consumables[j])
                 html_content += """
 <div class="clear-box content">
-    {} {} ao Hospital {}
-</div>""".format(int(pyo.value(self.model.v[j, i, l])), req_name_str, l)
+    {} {} ao {}
+</div>""".format(int(pyo.value(self.model.v[j, i, l])), req_name_str,
+  self.data.data_reader.get_hospital_name(self.data.dict_hospitals[l]))
         if printedTransfer:
           html_content += """
 </div>"""
@@ -490,21 +496,21 @@ body {
     <strong> Receber: </strong>"""
                   printedReceive = True
                 if j in self.data.dict_equipments.keys():
-                  if pyo.value(self.model.v[j, i, l]) > 1:
+                  if pyo.value(self.model.v[j, l, i]) > 1:
                     req_name_str = "unidades"
                   else:
                     req_name_str = "unidade"
                   req_name_str += " de " + self.data.data_reader.get_equipment_name(
                     self.data.dict_equipments[j])
                 elif j in self.data.dict_staff.keys():
-                  if pyo.value(self.model.v[j, i, l]) > 1:
+                  if pyo.value(self.model.v[j, l, i]) > 1:
                     req_name_str = "profissionais"
                   else:
                     req_name_str = "profissional"
                   req_name_str += " do time " + self.data.data_reader.get_staff_team(
                     self.data.dict_staff[j])
                 elif j in self.data.dict_consumables.keys():
-                  if pyo.value(self.model.v[j, i, l]) > 1:
+                  if pyo.value(self.model.v[j, l, i]) > 1:
                     req_name_str = "unidades"
                   else:
                     req_name_str = "unidade"
@@ -512,8 +518,9 @@ body {
                     self.data.dict_consumables[j])
                 html_content += """
 <div class="clear-box content">
-    {} {} do Hospital {}
-</div>""".format(int(pyo.value(self.model.v[j, l, i])), req_name_str, l)
+    {} {} do {}
+</div>""".format(int(pyo.value(self.model.v[j, l, i])), req_name_str,
+  self.data.data_reader.get_hospital_name(self.data.dict_hospitals[l]))
         if printedReceive:
           html_content += """
 </div>"""
@@ -536,9 +543,9 @@ body {
 </html>"""
     return html_content
   
-def run_model(demand):
-  model = Model(Data(demand))
+def run_model(demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
+  model = Model(Data(demand, equipment_rates, staff_rates, consumable_rates))
   with open('output.html', 'w') as file:
     file.write(model.to_html())
 
-run_model(50)
+run_model(70)

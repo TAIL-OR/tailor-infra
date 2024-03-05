@@ -1,0 +1,34 @@
+2024-03-04 22:19:15 | INFO | Presolving model
+2024-03-04 22:19:15 | INFO | 33 rows, 69 cols, 139 nonzeros
+2024-03-04 22:19:15 | INFO | 28 rows, 68 cols, 131 nonzeros
+2024-03-04 22:19:15 | INFO | Objective function is integral with scale 2
+2024-03-04 22:19:15 | INFO | 
+2024-03-04 22:19:15 | INFO | Solving MIP model with:
+2024-03-04 22:19:15 | INFO |    28 rows
+2024-03-04 22:19:15 | INFO |    68 cols (2 binary, 66 integer, 0 implied int., 0 continuous)
+2024-03-04 22:19:15 | INFO |    131 nonzeros
+2024-03-04 22:19:15 | INFO | 
+2024-03-04 22:19:15 | INFO |         Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work      
+2024-03-04 22:19:15 | INFO |      Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
+2024-03-04 22:19:15 | INFO | 
+2024-03-04 22:19:15 | INFO |          0       0         0   0.00%   1000000         inf                  inf        0      0      0         0     0.0s
+2024-03-04 22:19:15 | INFO |  T       0       0         0   0.00%   1000000         2652274           62.30%        0      0      0        40     0.0s
+2024-03-04 22:19:15 | INFO | 
+2024-03-04 22:19:15 | INFO | Solving report
+2024-03-04 22:19:15 | INFO |   Status            Optimal
+2024-03-04 22:19:15 | INFO |   Primal bound      2652274
+2024-03-04 22:19:15 | INFO |   Dual bound        2652274
+2024-03-04 22:19:15 | INFO |   Gap               0% (tolerance: 0.01%)
+2024-03-04 22:19:15 | INFO |   Solution status   feasible
+2024-03-04 22:19:15 | INFO |                     2652274 (objective)
+2024-03-04 22:19:15 | INFO |                     0 (bound viol.)
+2024-03-04 22:19:15 | INFO |                     0 (int. viol.)
+2024-03-04 22:19:15 | INFO |                     0 (row viol.)
+2024-03-04 22:19:15 | INFO |   Timing            0.00 (total)
+2024-03-04 22:19:15 | INFO |                     0.00 (presolve)
+2024-03-04 22:19:15 | INFO |                     0.00 (postsolve)
+2024-03-04 22:19:15 | INFO |   Nodes             1
+2024-03-04 22:19:15 | INFO |   LP iterations     40 (total)
+2024-03-04 22:19:15 | INFO |                     0 (strong br.)
+2024-03-04 22:19:15 | INFO |                     0 (separation)
+2024-03-04 22:19:15 | INFO |                     0 (heuristics)
