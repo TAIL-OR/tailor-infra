@@ -1,5 +1,6 @@
 import pyomo.environ as pyo
 import math
+from os import path
 
 from .read_data import ReadData
 from .predictive import Predictive
@@ -338,20 +339,21 @@ body {
 </div>
 <div class="hospital-container">
   <div class="image-box">
-    <img src="figures/coins.png" alt="Stack of coins">
+    <img src=""" + '"' + path.abspath('src/figures/coins.png') + '"' + """alt="Stack of coins">
     <div class="content">Or&ccedil;amento previsto</div>
     <div class="content"> R$ """
     budget_str = str(f'{budget:,}').replace('.', ',')
     html_content += budget_str.replace(',', '.', budget_str.count(',') - 1) + """ </div>
     </div>
     <div class="image-box">
-      <img src="figures/hospital.png" alt="Hospital">
+      <img src=""" + '"' + path.abspath('src/figures/hospital.png') + '"' + """alt="Hospital">
       <div class="content">Hospitais beneficiados</div> 
       <div class="content"> {} </div>
     </div>""".format(num_hospitals)
     html_content += """
     <div class="image-box">
-      <img src="figures/hospital_bed.png" alt="Hospital beds">
+      <img src=""" + '"' + path.abspath('src/figures/hospital_bed.png') + '"'
+    html_content += """ alt="Hospital beds">
       <div class="content">Leitos adicionados</div>
       <div class="content"> {} </div>
     </div>
@@ -539,12 +541,15 @@ body {
 <hr color=#e9e9e9>
 <footer>
 <div class="footer-box">
-    <img src="figures/sus.png" alt="SUS">
-    <img src="figures/logo_20_years.png" alt="20 years">
-    <img src="figures/footer.png" alt="Footer">
+    <img src={} alt="SUS">
+    <img src={} alt="20 years">
+    <img src={} alt="Footer">
 </div>
 </footer>
-</html>"""
+</html>""".format('"' + path.abspath('src/figures/sus.png') + '"',
+  '"' + path.abspath('src/figures/20_years.png') + '"',
+  '"' + path.abspath('src/figures/footer.png') + '"')
+    
     return html_content
   
 def run_model(demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
