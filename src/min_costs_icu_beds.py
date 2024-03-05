@@ -1,5 +1,6 @@
 import pyomo.environ as pyo
 from read_data import ReadData
+from predictive import Predictive
 
 class Data:
   def __init__(self, demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
@@ -27,7 +28,7 @@ class Data:
     if demand:
       self.d = demand # d: demand of ICU beds
     else:
-      self.d = 50 # To do: run predictive model
+      self.d = Predictive().contamination(1, True)['demand']
     
     self.c = [] # c: cost of building facilities
     for iter, id in enumerate(self.data_reader.get_hospital_ids()):
@@ -167,7 +168,7 @@ class Model:
       self.model.y_dependent_constraint.add(self.model.x[i] / self.data.u[i] <= self.model.y[i])
       self.model.y_dependent_constraint.add(self.model.y[i] <= self.model.x[i])
     
-    self.model.write('model.lp', io_options={'symbolic_solver_labels': True})
+    # self.model.write('model.lp', io_options={'symbolic_solver_labels': True})
     opt = pyo.SolverFactory('appsi_highs')
     self.results = opt.solve(self.model, tee=True)
     
