@@ -1,8 +1,8 @@
 import pyomo.environ as pyo
 import math
 
-from read_data import ReadData
-from predictive import Predictive
+from .read_data import ReadData
+from .predictive import Predictive
 
 class Data:
   def __init__(self, demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
