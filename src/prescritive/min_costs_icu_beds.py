@@ -2,8 +2,8 @@ import pyomo.environ as pyo
 from read_data import ReadData
 
 class Data:
-  def __init__(self, demand):
-    self.data_reader = ReadData()
+  def __init__(self, demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
+    self.data_reader = ReadData(equipment_rates, staff_rates, consumable_rates)
 
     self.F = list(range(len(self.data_reader.get_hospital_ids()))) # F: set of facilities
     self.dict_hospitals = {id: iter for iter, id in enumerate(self.data_reader.get_hospital_ids())}
@@ -24,7 +24,10 @@ class Data:
     self.U += list(range(len(self.R) + len(self.U), len(self.R) + len(self.U) +
       len(self.data_reader.get_consumable_ids())))
     
-    self.d = demand # d: demand of ICU beds
+    if demand:
+      self.d = demand # d: demand of ICU beds
+    else:
+      self.d = 50 # To do: run predictive model
     
     self.c = [] # c: cost of building facilities
     for iter, id in enumerate(self.data_reader.get_hospital_ids()):
@@ -539,8 +542,8 @@ body {
 </html>"""
     return html_content
   
-def run_model(demand):
-  model = Model(Data(demand))
+def run_model(demand = None, equipment_rates = None, staff_rates = None, consumable_rates = None):
+  model = Model(Data(demand, equipment_rates, staff_rates, consumable_rates))
   with open('output.html', 'w') as file:
     file.write(model.to_html())
 
