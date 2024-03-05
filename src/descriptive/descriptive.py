@@ -5,7 +5,7 @@ class Descriptive:
         self.statistics = Statistics()
         
     def describe_region_statistics(self):
-        pontuation = self.statistics
+        pontuation = self.statistics.region_pontuation()
 
         total_cases = self.statistics.region_get_total_cases()
         number_active_cases = self.statistics.region_get_active_cases()
@@ -48,13 +48,15 @@ class Descriptive:
             'waitlist': waitlist_last_nine_months
         }
         
-        response = {"case_chart": case_chart, "death_chart": death_chart, "vaccination_chart": vaccination_chart,
+        response = {"pontuation": pontuation, "case_chart": case_chart, "death_chart": death_chart, "vaccination_chart": vaccination_chart,
                     "vaccine_dose_chart": vaccine_dose_chart, "transmission_rate_chart": transmission_rate_chart, "contamination_chart": contamination_chart,
                     "symtom_chart": syntom_chart, "bed_occupancy_chart": bed_occupancy_chart}
         
         return response
     
     def describe_hospital_statistics(self):
+        pontuation = self.statistics.hospital_pontuation()
+
         total_cases = self.statistics.hospital_get_total_cases()
         number_active_cases = self.statistics.hospital_get_active_cases()
         number_recovered_cases = self.statistics.hospital_get_recover_cases()
@@ -80,6 +82,6 @@ class Descriptive:
             'occupied': occupied_beds_last_nine_months
         }
         
-        response = {"case_chart": case_chart, "death_chart": death_chart, "symtom_chart": syntom_chart, "bed_occupancy_chart": bed_occupancy_chart}
+        response = {"pontuation": pontuation, "case_chart": case_chart, "death_chart": death_chart, "symtom_chart": syntom_chart, "bed_occupancy_chart": bed_occupancy_chart}
         
         return response
