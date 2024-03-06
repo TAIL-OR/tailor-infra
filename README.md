@@ -49,13 +49,14 @@ Para rodar o modelo prescritivo, além de ter a aplicação rodando, é necessá
 }
 ```
 
-8) Aperte em "Send" e aguarde o envio da resposta.
+8) Clique em "Send" e aguarde o envio da resposta.
 
 ![Print de tela do aplicativo Postman após envio da resposta](https://github.com/TAIL-OR/tailor-infra/blob/main/figures/postman_response.png?raw=true "Envio da resposta no Postman")
 
-9) Copie e cole o conteúdo do campo de resposta ("Response") em um arquivo de texto e o salve em HTML (por exemplo, "output.html").
+9) Clique em "Save response" e, em seguida, em "Save to a file" e baixe o arquivo HTML.
 
 10) Abra o arquivo para acessar a solução prescrita.
 
 ![Print de tela do HTML gerado pelo modelo prescritivo](https://github.com/TAIL-OR/tailor-infra/blob/main/figures/output.png?raw=true "HTML gerado pelo modelo prescritivo")
 
+11) Caso você queira simular também mudanças no estoque e no corpo profissional dos hospitais, acesse a planilha [[TAIL-OR] Banco de dados](https://docs.google.com/spreadsheets/d/1c75vMr_bDLexPcuf0RcBzCxH_w5XcdSAYW_SGOjHu34/edit?usp=sharing) e faça alterações.
