@@ -24,7 +24,7 @@ Obs.: Recomendamos a utilização de Linux para executar a API.
 
 Para rodar o modelo prescritivo, além de ter a aplicação rodando, é necessário fazer uma requisição com envio de parâmetros. Uma boa interface para essa tarefa é o aplicativo Postman, disponível na loja de aplicativos do Linux.
 
-![Ícone do aplicativo Postman](https://github.com/TAIL-OR/tailor-infra/blob/main/figures/postman_logo.svg?raw=true "Aplicativo Postman")
+<img src="https://github.com/TAIL-OR/tailor-infra/blob/main/figures/postman_logo.svg?raw=true" alt="Ícone do aplicativo Postman" width="200"/>
 
 1) Baixe o Postman.
 
