@@ -14,7 +14,7 @@ Este documento apresenta um tutorial de como utilizar a API que se comunica com 
 
 A aplicação em funcionamento deve imprimir as seguintes mensagens no terminal:
 
-![Print de tela de aplicação em funcionamento](https://github.com/TAIL-OR/tailor-infra/tree/main/figures/app.png "Aplicação em funcionamento")
+![Print de tela de aplicação em funcionamento](https://github.com/TAIL-OR/tailor-infra/blob/main/figures/app.png?raw=true "Aplicação em funcionamento")
 
 Veja que o caminho para a porta de execução do aplicativo está destacado em vermelho.
 
@@ -24,7 +24,7 @@ Obs.: Recomendamos a utilização de Linux para executar a API.
 
 Para rodar o modelo prescritivo, além de ter a aplicação rodando, é necessário fazer uma requisição com envio de parâmetros. Uma boa interface para essa tarefa é o aplicativo Postman, disponível na loja de aplicativos do Linux.
 
-![Ícone do aplicativo Postman](https://github.com/TAIL-OR/tailor-infra/tree/main/figures/postman_logo.svg "Aplicativo Postman")
+![Ícone do aplicativo Postman](https://github.com/TAIL-OR/tailor-infra/blob/main/figures/postman_logo.svg?raw=true "Aplicativo Postman")
 
 1) Baixe o Postman.
 
@@ -51,11 +51,11 @@ Para rodar o modelo prescritivo, além de ter a aplicação rodando, é necessá
 
 8) Aperte em "Send" e aguarde o envio da resposta.
 
-![Print de tela do aplicativo Postman após envio da resposta](https://github.com/TAIL-OR/tailor-infra/tree/main/figures/postman_response.png "Envio da resposta no Postman")
+![Print de tela do aplicativo Postman após envio da resposta](https://github.com/TAIL-OR/tailor-infra/blob/main/figures/postman_response.png?raw=true "Envio da resposta no Postman")
 
 9) Copie e cole o conteúdo do campo de resposta ("Response") em um arquivo de texto e o salve em HTML (por exemplo, "output.html").
 
 10) Abra o arquivo para acessar a solução prescrita.
 
-![Print de tela do HTML gerado pelo modelo prescritivo](https://github.com/TAIL-OR/tailor-infra/tree/main/figures/output.png "HTML gerado pelo modelo prescritivo")
+![Print de tela do HTML gerado pelo modelo prescritivo](https://github.com/TAIL-OR/tailor-infra/blob/main/figures/output.png?raw=true "HTML gerado pelo modelo prescritivo")
 
